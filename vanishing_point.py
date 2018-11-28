@@ -37,11 +37,14 @@ while True:
         e1 = points[i]
         e2 = points[i+1]
         line = line_by_2points(e1, e2, image, vis=True)
-        lines.append(line)
+        if line.tolist() in [it.tolist() for it in lines]:
+            continue
+        else:
+            lines.append(line)
     for i in range(0, len(lines)-1, 2):
         vp = np.cross(lines[i], lines[i+1])
         #vanishing_points.append(vp)
-        print("vp %d:"%i, vp)
+        print("vp %d:"%(i/2), vp)
     cv2.imshow("image", image)
     key = cv2.waitKey(1)
     if key == ord('q'):

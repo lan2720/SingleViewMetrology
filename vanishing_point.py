@@ -44,6 +44,7 @@ while True:
             lines.append(line)
     for i in range(0, len(lines)-1, 2):
         vp = np.cross(lines[i], lines[i+1])
+        vp = (vp/vp[2]).astype(np.int)
         if vp.tolist() in [it.tolist() for it in vanishing_points]:
             continue
         else:

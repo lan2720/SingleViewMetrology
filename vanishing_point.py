@@ -2,6 +2,7 @@
 import cv2
 import numpy as np
 import copy
+import sys
 
 points = []
 
@@ -82,7 +83,8 @@ def show_vanishing_point_image(raw_image, vanishing_points, lines, border=30):
         en2 = compute_point_given_line([None, new_image.shape[0], 1], new_l)
         cv2.line(new_image, tuple(en1[:2]), tuple(en2[:2]), (0,255,0), 1)
     cv2.imshow("vanish_point", new_image)
-    
+
+
 
 def main():
     global points
@@ -90,14 +92,16 @@ def main():
     cv2.resizeWindow("image", 640, 480)
     cv2.setMouseCallback('image', select_point)  # 设置回调函数
     image = cv2.imread("box_small.jpg")
-
-    lines = [np.array([54,103,-13663]),
-             np.array([-85,-102,28662]),
-             np.array([-60,74,-3112]),
-             np.array([-34,75,2630]),
-             np.array([-31,8,1332]),
-             np.array([-32,0,4608])]
-    vanishing_points = [np.array([480,-119,1]), np.array([-215,-132,1]), np.array([144,391,1])] # 存储顺序必须为vpx,vpy,vpz(为方便后面的画图)
+    
+    #lines = [np.array([54,103,-13663]),
+    #         np.array([-85,-102,28662]),
+    #         np.array([-60,74,-3112]),
+    #         np.array([-34,75,2630]),
+    #         np.array([-31,8,1332]),
+    #         np.array([-32,0,4608])]
+    line_to_use = 3
+    lines = []
+    vanishing_points = []#[np.array([480,-119,1]), np.array([-215,-132,1]), np.array([144,391,1])] # 存储顺序必须为vpx,vpy,vpz(为方便后面的画图)
     while True:
         for p in points:
             cv2.circle(image, p, 2, (255,0,0), -1)
@@ -110,14 +114,25 @@ def main():
             else:
                 print("line:", line)
                 lines.append(line)
-        for i in range(0, len(lines)-1, 2):
-            vp = np.cross(lines[i], lines[i+1])
-            vp = (vp/vp[2]).astype(np.int)
+        for i in range(0, len(lines)-line_to_use+1, line_to_use):
+            if line_to_use == 2:
+                vp = np.cross(lines[i], lines[i+1])
+                vp = (vp/vp[2]).astype(np.int)
+            elif line_to_use == 3:
+                M = np.zeros((3,3), dtype=np.int) 
+                M += np.matrix(lines[i]).T.dot(np.matrix(lines[i])) #lines[i]
+                M += np.matrix(lines[i+1]).T.dot(np.matrix(lines[i+1])) #lines[i]
+                M += np.matrix(lines[i+2]).T.dot(np.matrix(lines[i+2])) #lines[i]
+                w, v = np.linalg.eigh(M) 
+                vpi = np.argmin(w)
+                vp = v[:,vpi]
+                vp = (vp/vp[2]).astype(np.int)
+            else:
+                raise Exception("Unsupported line_to_use=%d" % line_to_use)
             if vp.tolist() in [it.tolist() for it in vanishing_points]:
                 continue
             else:
                 vanishing_points.append(vp)
-                print("vp %d:"%(i/2), vp)
         cv2.imshow("image", image)
         if len(vanishing_points) == 3:
             show_vanishing_point_image(image, vanishing_points, lines)

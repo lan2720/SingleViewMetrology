@@ -74,7 +74,7 @@ def show_vanishing_point_image(raw_image, vanishing_points, lines, border=30):
     axis = ['x','y','z']
     for p, ax in zip(translated_vanishing_points, axis):
         cv2.circle(new_image, tuple(p.tolist()), 3, (0,0,255), -1)
-        cv2.putText(new_image,'VP-%s'%(ax.upper()), tuple((p-10).tolist()), 1, 2, (0,0,0))
+        cv2.putText(new_image,'VP-%s'%(ax.upper()), tuple((p-10).tolist()), cv2.FONT_HERSHEY_SIMPLEX, .3, (0,0,0))
     # 绘制得到灭点的直线
     for l in lines:
         new_l = translate_line(l, tran_vec)

@@ -3,6 +3,8 @@ import cv2
 import numpy as np
 import copy
 import sys
+import scipy
+from scipy import linalg, matrix
 
 points = []
 
@@ -85,6 +87,35 @@ def show_vanishing_point_image(raw_image, vanishing_points, lines, border=30):
     cv2.imshow("vanish_point", new_image)
 
 
+def null(A, eps=1e-15):
+    u, s, vh = scipy.linalg.svd(A)
+    null_mask = (s <= eps)
+    null_space = scipy.compress(null_mask, vh, axis=0)
+    return scipy.transpose(null_space)
+
+
+def get_intrinsic_K(p1, p2, p3):
+    assert p1[2] == 1 and p2[2] == 1 and p3[2] == 1
+    A = []
+    x1, y1 = p1[0], p1[1] 
+    x2, y2 = p2[0], p2[1]
+    A.append([x1*x2+y1*y2, x1+x2, y1+y2, 1])
+    x1, y1 = p1[0], p1[1] 
+    x2, y2 = p3[0], p3[1]
+    A.append([x1*x2+y1*y2, x1+x2, y1+y2, 1])
+    x1, y1 = p2[0], p2[1] 
+    x2, y2 = p3[0], p3[1]
+    A.append([x1*x2+y1*y2, x1+x2, y1+y2, 1])
+    A.append([0]*4)
+    A = matrix(A) # Aw = 0, A = [3,4], w = [4,1]
+    w = A*null(A)
+    w = w.reshape(-1)
+    print("w", w)
+    W = np.matrix([[w[0], 0, w[1]],[0, w[0], w[2]],[w[1], w[2], w[3]]])
+
+    res  = np.linalg.inv(np.linalg.cholesky(W))
+    print(res)
+
 
 def main():
     global points
@@ -132,7 +163,10 @@ def main():
             if vp.tolist() in [it.tolist() for it in vanishing_points]:
                 continue
             else:
+                print("vp:", vp)
                 vanishing_points.append(vp)
+        if len(vanishing_points) == 3:
+            get_intrinsic_K(vanishing_points[0], vanishing_points[1], vanishing_points[2])
         cv2.imshow("image", image)
         if len(vanishing_points) == 3:
             show_vanishing_point_image(image, vanishing_points, lines)

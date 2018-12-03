@@ -116,7 +116,8 @@ def main():
     cv2.namedWindow("image", 0)
     cv2.resizeWindow("image", 640, 480)
     cv2.setMouseCallback('image', select_point)  # 设置回调函数
-    image = cv2.imread("box_small.jpg")
+    #image = cv2.imread("box_small.jpg")
+    image = cv2.imread("/data1/Project/Jail/screenshot.jpg")
     print("image size:", image.shape) 
     #lines = [np.array([54,103,-13663]),
     #         np.array([-85,-102,28662]),
@@ -127,7 +128,8 @@ def main():
     line_to_use = 3
     lines = []
     vanishing_points = []#[np.array([480,-119,1]), np.array([-215,-132,1]), np.array([144,391,1])] # 存储顺序必须为vpx,vpy,vpz(为方便后面的画图)
-    while True:
+    FLAG = False
+    while not FLAG:
         for p in points:
             cv2.circle(image, p, 2, (255,0,0), -1)
         for i in range(0,len(points)-1,2):
@@ -162,6 +164,8 @@ def main():
         if len(vanishing_points) == 3:
             K = get_intrinsic_K(vanishing_points[0], vanishing_points[1], vanishing_points[2])
             print("K:", K)
+            #np.savez("hearingroom_intrinsic_K.npz", K=K)
+            FLAG = True
         cv2.imshow("image", image)
         if len(vanishing_points) == 3:
             show_vanishing_point_image(image, vanishing_points, lines)
